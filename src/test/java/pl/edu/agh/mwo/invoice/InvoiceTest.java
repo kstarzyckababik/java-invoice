@@ -7,10 +7,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import pl.edu.agh.mwo.invoice.product.DairyProduct;
-import pl.edu.agh.mwo.invoice.product.OtherProduct;
-import pl.edu.agh.mwo.invoice.product.Product;
-import pl.edu.agh.mwo.invoice.product.TaxFreeProduct;
+import pl.edu.agh.mwo.invoice.product.*;
+
+import static org.junit.Assert.*;
 
 public class InvoiceTest {
     private Invoice invoice;
@@ -124,4 +123,97 @@ public class InvoiceTest {
     public void testAddingNullProduct() {
         invoice.addProduct(null);
     }
+
+    @Test
+    public void invoiceNumber() {
+        Invoice invoice1 = new Invoice();
+        Invoice invoice2 = new Invoice();
+
+        assertNotNull(invoice1.getNumber());
+        assertNotNull(invoice2.getNumber());
+        assertNotEquals(invoice1.getNumber(), invoice2.getNumber());
+    }
+
+
+    @Test
+    public void invoiceShouldPrintProductsListCorrectly() {
+        Invoice invoice = new Invoice();
+        Product product1 = new DairyProduct("mleko", new BigDecimal("10.00"));
+        Product product2 = new DairyProduct("jogurcik", new BigDecimal("20.00"));
+
+        invoice.addProduct(product1, 2);
+        invoice.addProduct(product2, 1);
+
+        int invoiceNumber = invoice.getNumber();
+
+
+        String expectedPrintout = "Invoice number: " + invoiceNumber + "\n" +
+                "mleko, 2, 10.00\n" +
+                "jogurcik, 1, 20.00\n" +
+                "Number of items: 2";
+
+        assertEquals(expectedPrintout, invoice.printInvoice());
+    }
+
+
+    @Test
+    public void invoiceDuplicateProduct() {
+        Invoice invoice = new Invoice();
+        Product product1 = new DairyProduct("mleko", new BigDecimal("10.00"));
+        Product product2 = new DairyProduct("jogurcik", new BigDecimal("20.00"));
+
+
+        invoice.addProduct(product1, 2);
+        invoice.addProduct(product2, 1);
+        invoice.addProduct(product1,2);
+
+        int invoiceNumber = invoice.getNumber();
+
+
+        String expectedPrintout = "Invoice number: " + invoiceNumber + "\n" +
+                "mleko, 4, 10.00\n" +
+                "jogurcik, 1, 20.00\n" +
+                "Number of items: 2";
+
+        assertEquals(expectedPrintout, invoice.printInvoice());
+    }
+
+
+    @Test
+    public void taxShouldIncludeExciseDutyForWineAndFuel() {
+        Product wine = new BottleOfWine("Red Wine", new BigDecimal("20.00"), new BigDecimal("0.23"));
+        Product fuel = new FuelCanister("Diesel", new BigDecimal("100.00"));
+
+
+        Invoice invoice = new Invoice();
+        invoice.addProduct(wine, 1);
+        invoice.addProduct(fuel, 1);
+
+
+        BigDecimal expectedTax =
+                new BigDecimal("10.16").add(new BigDecimal("5.56")); // Red Wine: 4.6 + 5.56
+
+        assertEquals(0, expectedTax.compareTo(invoice.getTax()));
+
+    }
+
+    @Test
+    public void shouldCalculateCorrectGrossPriceForWineAndFuel() {
+        Product wine = new BottleOfWine("Merlot", new BigDecimal("20.00"), new BigDecimal("0.23")); // 20 + 4.6 + 5.56
+        Product fuel = new FuelCanister("Diesel", new BigDecimal("100.00")); // 100 + 5.56
+
+        assertEquals(0, new BigDecimal("30.16").compareTo(wine.getPriceWithTax()));
+        assertEquals(0, new BigDecimal("105.56").compareTo(fuel.getPriceWithTax()));
+
+    }
+
+
+
+
+
+
+
 }
+
+
+

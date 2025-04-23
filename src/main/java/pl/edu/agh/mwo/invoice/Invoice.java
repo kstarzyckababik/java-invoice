@@ -2,14 +2,22 @@ package pl.edu.agh.mwo.invoice;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import pl.edu.agh.mwo.invoice.product.Product;
 
 public class Invoice {
-    //private Collection<Product> products;
 
-    private Map<Product, Integer> products = new HashMap<>();
+    private Map<Product, Integer> products = new LinkedHashMap<>();
+    private static int nextNumber = 1;
+    private final int number;
+
+
+    public Invoice() {
+        this.number = nextNumber++;
+    }
+
 
     public void addProduct(Product product) {
         if(product==null){
@@ -22,7 +30,9 @@ public class Invoice {
         if(quantity<=0 ){
             throw new IllegalArgumentException("Quantity cannot be 0 and less than 0 ");
         }
-        products.put(product, quantity);
+
+        int currentQuantity = products.getOrDefault(product, 0);
+        products.put(product, currentQuantity + quantity);
     }
 
 
@@ -53,6 +63,28 @@ public class Invoice {
         return sum;
     }
 
+
+
+    public int getNumber() {
+        return number;
+    }
+
+    public String printInvoice() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Invoice number: ").append(this.number).append("\n");
+
+        for (Map.Entry<Product, Integer> entry : products.entrySet()) {
+            Product product = entry.getKey();
+            Integer quantity = entry.getValue();
+            sb.append(product.getName()).append(", ")
+                    .append(quantity).append(", ")
+                    .append(product.getPrice()).append("\n");
+        }
+        int n = products.size();
+
+        sb.append("Number of items: ").append(n);
+        return sb.toString();
+    }
 }
 
 
